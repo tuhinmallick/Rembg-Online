@@ -69,9 +69,7 @@ def main():
             'will be processed.')
         uploaded_files = uploaded_files[:MAX_FILES]
 
-    uploaded_files = [x for x in uploaded_files if x]
-
-    if uploaded_files:
+    if uploaded_files := [x for x in uploaded_files if x]:
         logger.info(f'Uploaded the following files: {uploaded_files}')
 
         progress_bar = st.empty()
@@ -86,8 +84,8 @@ def main():
             IS_GIF = True
             if len(uploaded_files) > 1:
                 st.error(
-                    f'The maximum number of allowed uploads when processing a '
-                    'GIF is one file!')
+                    'The maximum number of allowed uploads when processing a GIF is one file!'
+                )
                 return
 
             dur_text = 'Duration (in milliseconds) of each frame:'
@@ -108,7 +106,6 @@ def main():
 
         col1.image([x[1] for x in imgs_bytes])
 
-        nobg_imgs = []
         if st.sidebar.button('Remove background'):
             if GOTIFY:
                 files_dicts = [x.__dict__ for x in uploaded_files]
@@ -120,11 +117,12 @@ def main():
             if frames:
                 imgs_bytes = frames
 
+            nobg_imgs = []
             with st.spinner('Wait for it...'):
                 for n, (uploaded_file, bytes_data) in enumerate(imgs_bytes,
                                                                 start=1):
                     if isinstance(uploaded_file, int):
-                        p = Path(str(uploaded_file) + '.png')
+                        p = Path(f'{str(uploaded_file)}.png')
                     else:
                         p = Path(uploaded_file.name)
 
@@ -134,7 +132,7 @@ def main():
                         data = f.getvalue()
                     nobg_imgs.append((img, p, data))
 
-                    cur_progress = int(100 / len(imgs_bytes))
+                    cur_progress = 100 // len(imgs_bytes)
                     pb.progress(cur_progress * n)
                 time.sleep(1)
                 progress_bar.empty()
@@ -159,11 +157,7 @@ def main():
                                         compress_type=zipfile.ZIP_DEFLATED)
                     zip_data = tmp_zip.getvalue()
 
-                if IS_GIF:
-                    frames_literal = '(individual frames)'
-                else:
-                    frames_literal = ''
-
+                frames_literal = '(individual frames)' if IS_GIF else ''
                 down_btn.download_button(
                     label=f'Download all results {frames_literal}',
                     data=zip_data,
@@ -197,14 +191,10 @@ if __name__ == '__main__':
 
     load_dotenv()
 
-    MAX_FILES = 10
-    if os.getenv('MAX_FILES'):
-        MAX_FILES = int(os.getenv('MAX_FILES'))
-
-    GOTIFY = False
-    if os.getenv('GOTIFY_HOST_ADDRESS') and os.getenv('GOTIFY_APP_TOKEN'):
-        GOTIFY = True
-
+    MAX_FILES = int(os.getenv('MAX_FILES')) if os.getenv('MAX_FILES') else 10
+    GOTIFY = bool(
+        os.getenv('GOTIFY_HOST_ADDRESS') and os.getenv('GOTIFY_APP_TOKEN')
+    )
     K = str(uuid.uuid4())
     if 'key' not in st.session_state:
         st.session_state['key'] = K
